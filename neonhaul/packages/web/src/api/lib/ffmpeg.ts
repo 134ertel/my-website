@@ -40,14 +40,38 @@ export async function extractAudio(videoPath: string, outPath: string) {
   await run("ffmpeg", ["-y", "-i", videoPath, "-vn", "-ac", "1", "-ar", "16000", "-b:a", "64k", outPath]);
 }
 
+let cookiesFilePath: string | null | undefined;
+
+/** Writes YOUTUBE_COOKIES_B64 (a base64-encoded Netscape-format cookies.txt) to a tmp file
+ * once per process, so yt-dlp can authenticate as a real logged-in account. Without this,
+ * YouTube blocks most requests from datacenter/server IPs with a "sign in to confirm you're
+ * not a bot" error. Returns null if the env var isn't set. */
+function getYoutubeCookiesFile(): string | null {
+  if (cookiesFilePath !== undefined) return cookiesFilePath;
+  const b64 = process.env.YOUTUBE_COOKIES_B64;
+  if (!b64) {
+    cookiesFilePath = null;
+    return null;
+  }
+  const filePath = path.join(os.tmpdir(), "youtube-cookies.txt");
+  fs.writeFileSync(filePath, Buffer.from(b64, "base64"));
+  cookiesFilePath = filePath;
+  return filePath;
+}
+
+function cookiesArgs(): string[] {
+  const file = getYoutubeCookiesFile();
+  return file ? ["--cookies", file] : [];
+}
+
 export async function downloadYoutube(url: string, outPath: string, cancelKey?: string) {
   // yt-dlp is available in the sandbox base image
-  await run("yt-dlp", ["-f", "mp4/best", "-o", outPath, url], { cancelKey });
+  await run("yt-dlp", [...cookiesArgs(), "-f", "mp4/best", "-o", outPath, url], { cancelKey });
 }
 
 /** Reads a YouTube video's duration from metadata only, without downloading it. */
 export async function getYoutubeDurationSeconds(url: string): Promise<number> {
-  const { stdout } = await run("yt-dlp", ["--no-warnings", "--print", "%(duration)s", "--skip-download", url]);
+  const { stdout } = await run("yt-dlp", [...cookiesArgs(), "--no-warnings", "--print", "%(duration)s", "--skip-download", url]);
   const seconds = parseFloat(stdout.trim());
   return Number.isFinite(seconds) ? seconds : 0;
 }

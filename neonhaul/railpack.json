@@ -11,7 +11,8 @@
       "commands": [
         "mkdir -p .bin",
         "curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux -o .bin/yt-dlp",
-        "chmod a+rx .bin/yt-dlp"
+        "chmod a+rx .bin/yt-dlp",
+        "curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/app/.deno sh"
       ]
     }
   },
@@ -19,9 +20,9 @@
     "base": { "image": "oven/bun:1" },
     "inputs": [
       { "step": "build", "include": ["."] },
-      { "step": "ytdlp", "include": [".bin"] }
+      { "step": "ytdlp", "include": [".bin", ".deno"] }
     ],
-    "paths": ["/app/.bin"],
+    "paths": ["/app/.bin", "/app/.deno/bin"],
     "startCommand": "bun packages/web/src/server.ts",
     "aptPackages": ["ffmpeg"]
   }
