@@ -292,6 +292,7 @@ export async function renderVerticalClip(opts: {
     "-c:v", "libx264",
     "-preset", "veryfast",
     "-crf", "21",
+    "-threads", "2",
     "-pix_fmt", "yuv420p",
     "-c:a", "aac",
     "-b:a", "128k",
