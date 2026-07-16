@@ -7,6 +7,7 @@
     }
   },
   "deploy": {
+    "base": { "image": "oven/bun:1" },
     "inputs": [{ "step": "build", "include": ["."] }],
     "startCommand": "bun packages/web/src/server.ts",
     "aptPackages": ["ffmpeg", "python3", "yt-dlp"]
