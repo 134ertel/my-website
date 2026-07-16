@@ -3,7 +3,7 @@
   "steps": {
     "build": {
       "inputs": [{ "step": "install" }],
-      "commands": ["cd packages/web && bun run build"]
+      "commands": ["cd packages/web && bunx vite build"]
     }
   },
   "deploy": {
