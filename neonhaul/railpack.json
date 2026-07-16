@@ -1,0 +1,13 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "steps": {
+    "build": {
+      "inputs": [{ "step": "install" }],
+      "commands": ["cd packages/web && bun run build"]
+    }
+  },
+  "deploy": {
+    "startCommand": "bun packages/web/src/server.ts",
+    "aptPackages": ["ffmpeg", "python3", "yt-dlp"]
+  }
+}
