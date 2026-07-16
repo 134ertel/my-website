@@ -2,11 +2,12 @@
   "$schema": "https://schema.railpack.com",
   "steps": {
     "build": {
-      "inputs": [{ "step": "install" }],
+      "inputs": [{ "step": "install" }, { "local": true, "include": ["."] }],
       "commands": ["cd packages/web && bunx vite build"]
     }
   },
   "deploy": {
+    "inputs": [{ "step": "build", "include": ["."] }],
     "startCommand": "bun packages/web/src/server.ts",
     "aptPackages": ["ffmpeg", "python3", "yt-dlp"]
   }
