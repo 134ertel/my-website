@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "../components/layout/app-shell";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth";
-import { usePaddleCheckout } from "../hooks/use-paddle";
+import { usePolarCheckout } from "../hooks/use-polar";
 
 const PLAN_ITEMS: Record<string, string[]> = {
   free: ["10 minute videos lengths", "20 uploads/month", "AI clips", "Auto captions"],
@@ -19,7 +19,7 @@ const DEALS: Record<string, { was: string; off: string }> = {
 export default function Pricing() {
   const qc = useQueryClient();
   const { data: session } = authClient.useSession();
-  const { openCheckout } = usePaddleCheckout();
+  const { openCheckout } = usePolarCheckout();
   const [pending, setPending] = useState<string | null>(null);
   const [polling, setPolling] = useState(false);
 
@@ -37,9 +37,9 @@ export default function Pricing() {
   const activePlanId = me.data?.planId ?? "free";
   const isPendingCancel = Boolean(me.data?.cancelAtPeriodEnd);
 
-  const handleUpgrade = async (priceId: string | null) => {
-    if (!priceId || !session?.user) return;
-    await openCheckout({ priceId, userId: session.user.id, email: session.user.email });
+  const handleUpgrade = async (planId: "pro" | "business" | null) => {
+    if (!planId || !session?.user) return;
+    await openCheckout(planId);
     setPolling(true);
     setTimeout(() => setPolling(false), 15000);
   };
@@ -96,7 +96,7 @@ export default function Pricing() {
               </ul>
               <button
                 disabled={isActive || polling}
-                onClick={() => handleUpgrade(plan.paddlePriceId)}
+                onClick={() => handleUpgrade(plan.polarProductId ? (plan.id as "pro" | "business") : null)}
                 className={`mt-6 w-full rounded-xl py-2.5 text-sm font-semibold ${
                   isActive ? "cursor-default border border-border text-muted-foreground" : highlighted ? "bg-gradient-neon text-black" : "border border-border bg-muted"
                 }`}

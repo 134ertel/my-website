@@ -90,13 +90,13 @@ export const featureRequests = sqliteTable("feature_requests", {
   createdAt: integer("created_at", { mode: "timestamp_ms" }).default(now).notNull(),
 });
 
-// ---- Billing (local mirror of the customer's Paddle subscription + usage) ----
+// ---- Billing (local mirror of the customer's Polar subscription + usage) ----
 export const billingAccounts = sqliteTable("billing_accounts", {
   userId: text("user_id").primaryKey(),
   planId: text("plan_id").notNull().default("free"), // free, pro, business
   status: text("status").notNull().default("active"), // active, canceled, past_due
-  paddleCustomerId: text("paddle_customer_id"),
-  paddleSubscriptionId: text("paddle_subscription_id"),
+  polarCustomerId: text("polar_customer_id"),
+  polarSubscriptionId: text("polar_subscription_id"),
   cancelAtPeriodEnd: integer("cancel_at_period_end", { mode: "boolean" }).notNull().default(false),
   currentPeriodStart: integer("current_period_start", { mode: "timestamp_ms" }).default(now).notNull(),
   currentPeriodEnd: integer("current_period_end", { mode: "timestamp_ms" }).notNull(),
@@ -107,9 +107,9 @@ export const billingAccounts = sqliteTable("billing_accounts", {
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).default(now).$onUpdate(() => new Date()).notNull(),
 });
 
-// ---- Webhook Events (idempotency guard for Paddle webhook redelivery) ----
+// ---- Webhook Events (idempotency guard for Polar webhook redelivery) ----
 export const webhookEvents = sqliteTable("webhook_events", {
-  id: text("id").primaryKey(), // Paddle's event ID
+  id: text("id").primaryKey(), // Polar's webhook-id header value
   eventType: text("event_type").notNull(),
   receivedAt: integer("received_at", { mode: "timestamp_ms" }).default(now).notNull(),
 });

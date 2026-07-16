@@ -18,7 +18,7 @@ const USAGE_COLUMN: Record<MeteredFeature, "uploadsUsed" | "clipsGeneratedUsed" 
 /**
  * Returns the user's local billing row, lazily creating a fresh free-tier row if none
  * exists, and rolling the usage period forward (resetting counters) if it has elapsed.
- * For paid plans this reset branch is a safety net — the Paddle webhook is the primary
+ * For paid plans this reset branch is a safety net — the Polar webhook is the primary
  * reset trigger on renewal (see routes/webhooks.ts).
  */
 export async function getBillingAccount(userId: string) {

@@ -46,8 +46,8 @@ export default function RefundPolicy() {
           <section>
             <h2 className="font-display text-lg font-semibold text-white">4. Payment Processing</h2>
             <p className="mt-2">
-              Payments are processed by Paddle.com, our authorized reseller and merchant of record. Paddle handles
-              billing and payment collection on our behalf.
+              Payments are processed by Polar Software, Inc., our authorized reseller and merchant of record. Polar
+              handles billing and payment collection on our behalf.
             </p>
           </section>
 

@@ -1,11 +1,15 @@
 import { Hono } from "hono";
+import { z } from "zod";
+import { zValidator } from "@hono/zod-validator";
 import { eq } from "drizzle-orm";
 import { db } from "../database";
 import { billingAccounts } from "../database/schema";
 import { requireAuth } from "../middleware/auth";
 import { getBillingAccount } from "../lib/billing";
 import { PLANS, PLAN_IDS, type PlanId } from "../lib/plans";
-import { paddle } from "../lib/paddle";
+import { polar } from "../lib/polar";
+
+const checkoutSchema = z.object({ planId: z.enum(["pro", "business"]) });
 
 export const billingRoute = new Hono()
   .get("/me", requireAuth, async (c) => {
@@ -48,26 +52,48 @@ export const billingRoute = new Hono()
         id,
         name: PLANS[id].name,
         priceDisplay: PLANS[id].priceDisplay,
-        paddlePriceId: PLANS[id].paddlePriceId,
+        polarProductId: PLANS[id].polarProductId,
       })),
       200,
     );
   })
+  .post("/checkout", requireAuth, zValidator("json", checkoutSchema), async (c) => {
+    const user = c.get("user")!;
+    const { planId } = c.req.valid("json");
+    const productId = PLANS[planId].polarProductId;
+    if (!productId) return c.json({ message: "Plan is not purchasable" }, 400);
+
+    const checkout = await polar.checkouts.create({
+      products: [productId],
+      successUrl: `${process.env.WEBSITE_URL}/pricing?checkout=success`,
+      externalCustomerId: user.id,
+      customerEmail: user.email,
+      metadata: { userId: user.id },
+    });
+
+    return c.json({ url: checkout.url }, 200);
+  })
   .post("/cancel", requireAuth, async (c) => {
     const user = c.get("user")!;
     const account = await getBillingAccount(user.id);
-    if (!account.paddleSubscriptionId) return c.json({ message: "Nothing to cancel" }, 400);
+    if (!account.polarSubscriptionId) return c.json({ message: "Nothing to cancel" }, 400);
 
-    await paddle.subscriptions.cancel(account.paddleSubscriptionId, { effectiveFrom: "next_billing_period" });
+    await polar.subscriptions.update({
+      id: account.polarSubscriptionId,
+      subscriptionUpdate: { cancelAtPeriodEnd: true },
+    });
     await db.update(billingAccounts).set({ cancelAtPeriodEnd: true }).where(eq(billingAccounts.userId, user.id));
     return c.json({ ok: true }, 200);
   })
   .post("/uncancel", requireAuth, async (c) => {
     const user = c.get("user")!;
     const account = await getBillingAccount(user.id);
-    if (!account.paddleSubscriptionId) return c.json({ message: "Nothing to undo" }, 400);
+    if (!account.polarSubscriptionId) return c.json({ message: "Nothing to undo" }, 400);
 
-    await paddle.subscriptions.update(account.paddleSubscriptionId, { scheduledChange: null });
+    await polar.subscriptions.update({
+      id: account.polarSubscriptionId,
+      subscriptionUpdate: { cancelAtPeriodEnd: false },
+    });
     await db.update(billingAccounts).set({ cancelAtPeriodEnd: false }).where(eq(billingAccounts.userId, user.id));
     return c.json({ ok: true }, 200);
   });
