@@ -1,15 +1,28 @@
 {
   "$schema": "https://schema.railpack.com",
+  "buildAptPackages": ["curl", "ca-certificates"],
   "steps": {
     "build": {
       "inputs": [{ "step": "install" }, { "local": true, "include": ["."] }],
       "commands": ["cd packages/web && bunx vite build"]
+    },
+    "ytdlp": {
+      "inputs": [{ "step": "install" }],
+      "commands": [
+        "mkdir -p .bin",
+        "curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o .bin/yt-dlp",
+        "chmod a+rx .bin/yt-dlp"
+      ]
     }
   },
   "deploy": {
     "base": { "image": "oven/bun:1" },
-    "inputs": [{ "step": "build", "include": ["."] }],
+    "inputs": [
+      { "step": "build", "include": ["."] },
+      { "step": "ytdlp", "include": [".bin"] }
+    ],
+    "paths": ["/app/.bin"],
     "startCommand": "bun packages/web/src/server.ts",
-    "aptPackages": ["ffmpeg", "python3", "yt-dlp"]
+    "aptPackages": ["ffmpeg"]
   }
 }
