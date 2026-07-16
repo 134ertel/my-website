@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["bun", "ffmpeg", "python3", "yt-dlp"]
+
+[phases.install]
+cmds = ["bun install --frozen-lockfile"]
+
+[phases.build]
+cmds = ["cd packages/web && bun run build"]
+
+[start]
+cmd = "bun packages/web/src/server.ts"
