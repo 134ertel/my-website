@@ -63,9 +63,12 @@ export const billingRoute = new Hono()
     const productId = PLANS[planId].polarProductId;
     if (!productId) return c.json({ message: "Plan is not purchasable" }, 400);
 
+    const origin = c.req.header("origin") ?? process.env.WEBSITE_URL ?? "";
+
     const checkout = await polar.checkouts.create({
       products: [productId],
-      successUrl: `${process.env.WEBSITE_URL}/pricing?checkout=success`,
+      successUrl: `${origin}/pricing?checkout=success`,
+      embedOrigin: origin,
       externalCustomerId: user.id,
       customerEmail: user.email,
       metadata: { userId: user.id },
