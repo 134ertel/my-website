@@ -9,13 +9,12 @@ import { planIdForPolarProductId } from "../lib/plans";
 async function syncSubscription(sub: Subscription) {
   const planId = sub.productId ? planIdForPolarProductId(sub.productId) : null;
   const userId = sub.customer?.externalId ?? (sub.metadata?.userId as string | undefined);
-
-  const [existing] = await db.select().from(billingAccounts).where(eq(billingAccounts.polarSubscriptionId, sub.id));
-  const targetUserId = existing?.userId ?? userId;
-  if (!targetUserId) {
+  if (!userId) {
     console.error("[polar webhook] no userId found for subscription", sub.id, JSON.stringify(sub));
     return;
   }
+
+  const [existing] = await db.select().from(billingAccounts).where(eq(billingAccounts.userId, userId));
 
   const currentPeriodStart = new Date(sub.currentPeriodStart);
   const currentPeriodEnd = new Date(sub.currentPeriodEnd);
@@ -25,7 +24,7 @@ async function syncSubscription(sub: Subscription) {
     sub.status === "active" || sub.status === "trialing" ? "active" : sub.status === "past_due" ? "past_due" : "canceled";
 
   const values = {
-    userId: targetUserId,
+    userId,
     planId: status === "canceled" ? "free" : (planId ?? existing?.planId ?? "free"),
     status,
     polarCustomerId: sub.customerId,
@@ -37,7 +36,7 @@ async function syncSubscription(sub: Subscription) {
   };
 
   if (existing) {
-    await db.update(billingAccounts).set(values).where(eq(billingAccounts.userId, targetUserId));
+    await db.update(billingAccounts).set(values).where(eq(billingAccounts.userId, userId));
   } else {
     await db.insert(billingAccounts).values(values);
   }
