@@ -30,9 +30,8 @@ export default function SignIn() {
 
   const google = async () => {
     setError("");
-    const result = await authClient.managedAuth.signIn({ provider: "google" });
-    if (result.error && result.error.code !== "POPUP_CLOSED") setError(result.error.message ?? "Google sign-in failed");
-    else if (!result.error) navigate("/dashboard");
+    const result = await authClient.signIn.social({ provider: "google", callbackURL: "/dashboard" });
+    if (result.error) setError(result.error.message ?? "Google sign-in failed");
   };
 
   return (
