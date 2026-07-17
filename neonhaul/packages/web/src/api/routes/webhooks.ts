@@ -13,7 +13,7 @@ async function syncSubscription(sub: Subscription) {
   const [existing] = await db.select().from(billingAccounts).where(eq(billingAccounts.polarSubscriptionId, sub.id));
   const targetUserId = existing?.userId ?? userId;
   if (!targetUserId) {
-    console.error("[polar webhook] no userId found for subscription", sub.id);
+    console.error("[polar webhook] no userId found for subscription", sub.id, JSON.stringify(sub));
     return;
   }
 
