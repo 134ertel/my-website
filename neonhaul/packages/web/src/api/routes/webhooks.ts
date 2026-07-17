@@ -8,7 +8,7 @@ import { planIdForPolarProductId } from "../lib/plans";
 
 async function syncSubscription(sub: Subscription) {
   const planId = sub.productId ? planIdForPolarProductId(sub.productId) : null;
-  const userId = sub.customer.externalId ?? (sub.metadata.userId as string | undefined);
+  const userId = sub.customer?.externalId ?? (sub.metadata?.userId as string | undefined);
 
   const [existing] = await db.select().from(billingAccounts).where(eq(billingAccounts.polarSubscriptionId, sub.id));
   const targetUserId = existing?.userId ?? userId;
