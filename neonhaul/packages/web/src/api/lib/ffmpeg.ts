@@ -66,7 +66,20 @@ function cookiesArgs(): string[] {
 
 export async function downloadYoutube(url: string, outPath: string, cancelKey?: string) {
   // yt-dlp is available in the sandbox base image
-  await run("yt-dlp", [...cookiesArgs(), "-f", "mp4/best", "-o", outPath, url], { cancelKey });
+  // "mp4/best" prefers a pre-merged progressive format, which YouTube caps at 720p --
+  // true 1080p+ only exists as separate video/audio streams. Request those and let
+  // yt-dlp merge them via ffmpeg so higher output resolutions have real detail to use.
+  await run(
+    "yt-dlp",
+    [
+      ...cookiesArgs(),
+      "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
+      "--merge-output-format", "mp4",
+      "-o", outPath,
+      url,
+    ],
+    { cancelKey },
+  );
 }
 
 /** Reads a YouTube video's duration from metadata only, without downloading it. */
