@@ -69,11 +69,13 @@ export async function downloadYoutube(url: string, outPath: string, cancelKey?: 
   // "mp4/best" prefers a pre-merged progressive format, which YouTube caps at 720p --
   // true 1080p+ only exists as separate video/audio streams. Request those and let
   // yt-dlp merge them via ffmpeg so higher output resolutions have real detail to use.
+  // Capped at 1080p (not true "best") because decoding/filtering a much larger source
+  // (e.g. 4K) exceeds this container's 1GB memory limit and gets OOM-killed mid-render.
   await run(
     "yt-dlp",
     [
       ...cookiesArgs(),
-      "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
+      "-f", "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=1080]+bestaudio/best[height<=1080]/best",
       "--merge-output-format", "mp4",
       "-o", outPath,
       url,
